@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/javascripts/jquery-1.11.2.min.js"></script>
+    <script src='/socket.io/socket.io.js'></script>
+    <script>
+    	$(document).ready(function(){
+    		// alert('hello');
+    		io = io.connect();
+    		io.emit('ready');
+    		var room = 'boss';
+    		$('#submit_btn').on('click', function(data){
+    			io.emit('got_a_new_user', {name: $('#name').val(), room: room});
+    			io.on('new_user', function(data){
+    				console.log(data);
+    				$('#message_board').prepend("<div class='box'><div class='header'><h3>" + $('#name').val() + "</h3></div><div id='" + data.sessionID + "'><p><textarea class='new_text'></textarea></p></div></div>")
+    			})
+			});
+			$(this).on('keyup', '.new_text', function(){
+				console.log('keyup');
+				io.emit('updated_text', {text: $('.new_text').val() });
+			})
+    		// io.on('new_user', function(data){
+    		// 	console.log('hesdfsa', data);
+    			
+    		// })
+    		io.on('existing_users', function(data){
+    			// console.log(data.users);
+				for(i = 0; i < data.users.length - 1; i++){
+					console.log(data.users[i].sessionID);
+					$('#message_board').prepend("<div class='box'><div class='header'><h3>" + data.users[i].name + "</h3></div><div id='" + data.users[i].sessionID + "'><p></p></div></div>")
+				}
+    		})
+    		io.on('new_message', function(text){
+    			console.log(text);
+    			var box = document.getElementById(text.sessionID);
+    			$(box).html(text.text);
+
+    		})
+    		
+    			
+    		
+    	});
+    </script>
+  </head>
+  <body>
+    <div class="input_name">
+    	<p>The page at https://localhost says:</p>
+    	<p>Your name:</p>
+    	<p><input type='text' name='name' id='name' placeholder='name'></p>
+    	<input type='submit' value='OK' id='submit_btn'>
+    	<input type='submit' value='Cancel' id='cancel'>
+    </div>
+    <div id='message_board'></div>
+  </body>
+</html>
